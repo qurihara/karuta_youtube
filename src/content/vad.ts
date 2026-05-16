@@ -103,19 +103,120 @@ export class MainThreadVAD {
       // Silero v5 ports ("input"/"state"/"sr" → "output"/"stateN").
       // Wrong names or shapes would normally throw at run-time, but a
       // model that returns prob 0 forever needs verification.
+      const meta = (this.session as unknown as {
+        inputMetadata?: Record<string, { type?: string; dims?: unknown[] }>;
+        outputMetadata?: Record<string, { type?: string; dims?: unknown[] }>;
+      });
       console.warn(
         "[karuta] VAD model loaded:",
         JSON.stringify({
           inputs: this.session.inputNames,
           outputs: this.session.outputNames,
+          inputMetadata: meta.inputMetadata
+            ? Object.fromEntries(
+                Object.entries(meta.inputMetadata).map(([k, v]) => [
+                  k,
+                  { type: v.type, dims: v.dims },
+                ]),
+              )
+            : null,
+          outputMetadata: meta.outputMetadata
+            ? Object.fromEntries(
+                Object.entries(meta.outputMetadata).map(([k, v]) => [
+                  k,
+                  { type: v.type, dims: v.dims },
+                ]),
+              )
+            : null,
         }),
       );
       this.reset();
+      await this.runSelfTest();
       this.cb.onReady?.();
     } catch (e) {
       const m = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
       this.cb.onError(`init failed: ${m}`);
     }
+  }
+
+  private async runSelfTest(): Promise<void> {
+    if (!this.session) return;
+    const N = this.opts.frameSize;
+    const SR = this.opts.sampleRate;
+
+    const cases: Array<{ name: string; sig: Float32Array }> = [
+      {
+        name: "all_zeros",
+        sig: new Float32Array(N),
+      },
+      {
+        name: "sine_440hz_0.3",
+        sig: (() => {
+          const s = new Float32Array(N);
+          for (let i = 0; i < N; i++)
+            s[i] = 0.3 * Math.sin((2 * Math.PI * 440 * i) / SR);
+          return s;
+        })(),
+      },
+      {
+        name: "white_noise_0.3",
+        sig: (() => {
+          const s = new Float32Array(N);
+          for (let i = 0; i < N; i++) s[i] = (Math.random() - 0.5) * 0.6;
+          return s;
+        })(),
+      },
+      {
+        name: "modulated_noise_speechlike",
+        sig: (() => {
+          // White noise modulated by ~5Hz syllabic envelope at peak 0.5.
+          const s = new Float32Array(N);
+          for (let i = 0; i < N; i++) {
+            const env = 0.5 * Math.abs(Math.sin((2 * Math.PI * 5 * i) / SR));
+            s[i] = (Math.random() - 0.5) * env * 2;
+          }
+          return s;
+        })(),
+      },
+    ];
+
+    const results: Record<string, number[]> = {};
+    for (const c of cases) {
+      let testState = new Float32Array(2 * 1 * 128);
+      const probs: number[] = [];
+      // Feed the same signal 10 times so the LSTM state can adapt.
+      for (let f = 0; f < 10; f++) {
+        const input = new ort.Tensor("float32", c.sig, [1, N]);
+        const state = new ort.Tensor("float32", testState, STATE_DIMS);
+        const sr = new ort.Tensor(
+          "int64",
+          BigInt64Array.from([BigInt(SR)]),
+          [],
+        );
+        try {
+          const out = await this.session.run({ input, state, sr });
+          const oName =
+            this.session.outputNames.find((n) => n === "output") ??
+            this.session.outputNames[0];
+          const sName =
+            this.session.outputNames.find((n) => n === "stateN") ??
+            this.session.outputNames[1];
+          probs.push(+(out[oName].data as Float32Array)[0].toFixed(6));
+          testState = new Float32Array(out[sName].data as Float32Array);
+        } catch (e) {
+          console.warn(
+            "[karuta] self-test threw on",
+            c.name,
+            "frame",
+            f,
+            (e as Error).message,
+          );
+          break;
+        }
+      }
+      results[c.name] = probs;
+    }
+    console.warn("[karuta] VAD self-test results:", JSON.stringify(results));
   }
 
   reset(): void {
