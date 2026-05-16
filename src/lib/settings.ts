@@ -1,4 +1,5 @@
 export interface Settings {
+  enabled: boolean;
   rewindSeconds: number;
   gapThresholdSeconds: number;
   hudOpacityIdle: number;
@@ -6,31 +7,34 @@ export interface Settings {
 }
 
 export const DEFAULTS: Settings = {
+  enabled: true,
   rewindSeconds: 1.0,
   gapThresholdSeconds: 0.5,
   hudOpacityIdle: 0.4,
   timelineSeconds: 30,
 };
 
-const RANGES: { [K in keyof Settings]: [number, number] } = {
+const NUMERIC_RANGES: { [k: string]: [number, number] } = {
   rewindSeconds: [0.0, 5.0],
   gapThresholdSeconds: [0.1, 1.0],
   hudOpacityIdle: [0.1, 1.0],
   timelineSeconds: [10, 60],
 };
 
-const clamp = (key: keyof Settings, value: number): number => {
-  const [min, max] = RANGES[key];
-  if (Number.isNaN(value)) return DEFAULTS[key];
-  return Math.min(max, Math.max(min, value));
+const clampNumeric = (key: string, value: number): number => {
+  const range = NUMERIC_RANGES[key];
+  if (!range) return value;
+  if (Number.isNaN(value)) return DEFAULTS[key as keyof Settings] as number;
+  return Math.min(range[1], Math.max(range[0], value));
 };
 
 const sanitize = (raw: Partial<Settings>): Settings => {
   const out: Settings = { ...DEFAULTS };
-  for (const key of Object.keys(DEFAULTS) as (keyof Settings)[]) {
-    const v = raw[key];
+  if (typeof raw.enabled === "boolean") out.enabled = raw.enabled;
+  for (const key of Object.keys(NUMERIC_RANGES)) {
+    const v = raw[key as keyof Settings];
     if (typeof v === "number") {
-      out[key] = clamp(key, v);
+      (out as unknown as Record<string, number>)[key] = clampNumeric(key, v);
     }
   }
   return out;
@@ -49,7 +53,10 @@ export const saveSetting = async <K extends keyof Settings>(
   key: K,
   value: Settings[K],
 ): Promise<Settings[K]> => {
-  const v = clamp(key, value as number) as Settings[K];
+  let v: Settings[K] = value;
+  if (typeof value === "number") {
+    v = clampNumeric(key, value) as Settings[K];
+  }
   try {
     await chrome.storage.sync.set({ [key]: v });
   } catch {
@@ -67,11 +74,17 @@ export const onSettingsChanged = (
   ) => {
     if (area !== "sync") return;
     const patch: Partial<Settings> = {};
-    for (const key of Object.keys(DEFAULTS) as (keyof Settings)[]) {
+    if ("enabled" in changes && typeof changes.enabled?.newValue === "boolean") {
+      patch.enabled = changes.enabled.newValue;
+    }
+    for (const key of Object.keys(NUMERIC_RANGES)) {
       if (key in changes) {
         const next = changes[key]?.newValue;
         if (typeof next === "number") {
-          (patch[key] as number) = clamp(key, next);
+          (patch as unknown as Record<string, number>)[key] = clampNumeric(
+            key,
+            next,
+          );
         }
       }
     }

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>Karuta YouTube HUD</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Karuta YouTube HUD</h1>
+      <label class="switch" title="拡張機能 ON / OFF">
+        <input type="checkbox" id="enabled" />
+        <span></span>
+      </label>
+    </header>
+
+    <section>
+      <p class="hint">
+        YouTubeの競技かるた動画で、上の句直前にワンクリックで巻き戻すHUDを表示します。
+      </p>
+      <p class="hint dim">
+        OFFにすると音声認識・HUD表示の両方が停止します。設定の細部はHUDの⚙ボタンから。
+      </p>
+    </section>
+
+    <footer>変更は開いているYouTubeタブに即時反映されます。</footer>
+    <div class="credit">
+      <a href="https://github.com/qurihara/karuta_youtube" target="_blank" rel="noopener">GitHub</a>
+    </div>
+
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>

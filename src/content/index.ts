@@ -252,11 +252,26 @@ const main = async () => {
   state.mount = mount;
   mount.mount();
 
+  // Master enable/disable: hide HUD and gate VAD inference together. This
+  // is the single switch exposed in the popup.
+  if (!settings.enabled) {
+    hud.hide();
+  }
+
   onSettingsChanged((patch) => {
     Object.assign(state.settings!, patch);
     hud.updateSettings(patch);
     if (typeof patch.gapThresholdSeconds === "number") {
       state.tracker?.setGapThreshold(patch.gapThresholdSeconds);
+    }
+    if (typeof patch.enabled === "boolean") {
+      state.vad?.setEnabled(patch.enabled);
+      if (patch.enabled) {
+        hud.show();
+      } else {
+        hud.hide();
+        state.tracker?.reset();
+      }
     }
   });
 
@@ -287,6 +302,7 @@ const main = async () => {
     },
   });
   state.vad = vad;
+  vad.setEnabled(settings.enabled);
   void vad.init(VAD_MODEL_URL, VAD_WASM_BASE);
 
   const watcher = new YouTubeWatcher();

@@ -54,6 +54,10 @@ export class MainThreadVAD {
   private pendingStartTime = 0;
   private lastSpeechFrameTime = 0;
 
+  // Master enable flag (from popup). When false, processFrame is a no-op so
+  // no inference runs and no events fire.
+  private enabled = true;
+
   // AGC state
   private runningPeak = 0;
   private currentGain = 1;
@@ -232,8 +236,23 @@ export class MainThreadVAD {
     this.opts = { ...this.opts, ...opts };
   }
 
+  setEnabled(enabled: boolean): void {
+    if (this.enabled === enabled) return;
+    this.enabled = enabled;
+    if (!enabled) {
+      // Reset hysteresis state so re-enable starts fresh.
+      this.runningPeak = 0;
+      this.currentGain = 1;
+      this.inSpeech = false;
+      this.consecutiveSpeechMs = 0;
+      this.consecutiveSilenceMs = 0;
+      this.queue = Promise.resolve();
+    }
+  }
+
   /** Queue a frame for inference. Events delivered via callbacks. */
   processFrame(pcm: Float32Array, tFrameStart: number): void {
+    if (!this.enabled) return;
     this.queue = this.queue
       .then(() => this.runFrame(pcm, tFrameStart))
       .catch((e) => {
