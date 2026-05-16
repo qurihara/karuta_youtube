@@ -21,7 +21,9 @@ export interface VADStats {
   ready: boolean;
   framesProcessed: number;
   lastProb: number;
+  maxProb: number;
   lastPeak: number;
+  maxPeak: number;
   agcGain: number;
   inSpeech: boolean;
   speechSegments: number;
@@ -34,7 +36,7 @@ export interface VADStats {
 // Silero VAD. We push the recent peak toward TARGET_PEAK with a one-shot
 // attack and a ~1s release.
 const AGC_TARGET_PEAK = 0.5;
-const AGC_MAX_GAIN = 16;
+const AGC_MAX_GAIN = 32;
 const AGC_RELEASE_PER_FRAME = 0.98; // ~31 frames per second at 32ms each
 
 export class MainThreadVAD {
@@ -58,7 +60,9 @@ export class MainThreadVAD {
   // diagnostics
   private framesProcessed = 0;
   private lastProb = 0;
+  private maxProb = 0;
   private lastPeak = 0;
+  private maxPeak = 0;
   private speechSegments = 0;
   private lastFrameAt = 0;
 
@@ -69,7 +73,9 @@ export class MainThreadVAD {
       ready: this.session !== null,
       framesProcessed: this.framesProcessed,
       lastProb: this.lastProb,
+      maxProb: this.maxProb,
       lastPeak: this.lastPeak,
+      maxPeak: this.maxPeak,
       agcGain: this.currentGain,
       inSpeech: this.inSpeech,
       speechSegments: this.speechSegments,
@@ -197,6 +203,8 @@ export class MainThreadVAD {
 
     this.framesProcessed++;
     this.lastProb = prob;
+    if (prob > this.maxProb) this.maxProb = prob;
+    if (rawPeak > this.maxPeak) this.maxPeak = rawPeak;
     this.lastFrameAt = tFrameStart;
 
     // Dump detail for a handful of early frames and then periodically

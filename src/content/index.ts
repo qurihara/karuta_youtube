@@ -169,10 +169,10 @@ const attachToVideo = async (video: HTMLVideoElement, settings: Settings) => {
       const stateWarn = ctx.state !== "running" ? ` ⚠${ctx.state}` : "";
       const text =
         `f:${stats.framesProcessed} ` +
-        `pk:${stats.lastPeak.toFixed(3)} ` +
+        `pk:${stats.lastPeak.toFixed(3)}/${stats.maxPeak.toFixed(2)} ` +
         `aPk:${analyserPeak.toFixed(3)} ` +
         `g:${stats.agcGain.toFixed(1)}x ` +
-        `p:${stats.lastProb.toFixed(4)} ` +
+        `p:${stats.lastProb.toFixed(3)}/${stats.maxProb.toFixed(2)} ` +
         `seg:${stats.speechSegments} ` +
         `yt:${vol.toFixed(2)} ` +
         `ctx:${ctx.state[0]}` +
