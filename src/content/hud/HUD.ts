@@ -44,6 +44,9 @@ export class Hud {
   private readonly statusText: HTMLSpanElement;
   private readonly liveBadge: HTMLSpanElement;
   private readonly panelRoot: HTMLDivElement;
+  private readonly debugLine: HTMLDivElement;
+  private readonly debugMic: HTMLSpanElement;
+  private readonly debugText: HTMLSpanElement;
   private readonly timeline: TimelineRenderer;
 
   private active = false;
@@ -118,11 +121,16 @@ export class Hud {
     ]);
     this.settingsPanel = el("div", { class: "settings-panel" }, [gapRow]);
 
+    this.debugMic = el("span", { class: "mic" });
+    this.debugText = el("span", { class: "debug-text" }, ["—"]);
+    this.debugLine = el("div", { class: "debug" }, [this.debugMic, this.debugText]);
+
     const panel = el("div", { class: "panel" }, [
       topRow,
       nRow,
       this.canvas,
       statusRow,
+      this.debugLine,
       this.settingsPanel,
     ]);
     panel.style.setProperty(
@@ -192,6 +200,11 @@ export class Hud {
 
   setLive(isLive: boolean) {
     this.liveBadge.classList.toggle("on", isLive);
+  }
+
+  setDebug(text: string, micActive: boolean) {
+    this.debugText.textContent = text;
+    this.debugMic.classList.toggle("active", micActive);
   }
 
   updateSettings(patch: Partial<Settings>) {

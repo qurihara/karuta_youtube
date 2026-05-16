@@ -17,6 +17,15 @@ export interface VADCallbacks {
 
 const STATE_DIMS = [2, 1, 128];
 
+export interface VADStats {
+  ready: boolean;
+  framesProcessed: number;
+  lastProb: number;
+  inSpeech: boolean;
+  speechSegments: number;
+  lastFrameAt: number;
+}
+
 export class MainThreadVAD {
   private session: ort.InferenceSession | null = null;
   private state = new Float32Array(2 * 1 * 128);
@@ -31,7 +40,24 @@ export class MainThreadVAD {
   private pendingStartTime = 0;
   private lastSpeechFrameTime = 0;
 
+  // diagnostics
+  private framesProcessed = 0;
+  private lastProb = 0;
+  private speechSegments = 0;
+  private lastFrameAt = 0;
+
   constructor(private readonly cb: VADCallbacks) {}
+
+  getStats(): VADStats {
+    return {
+      ready: this.session !== null,
+      framesProcessed: this.framesProcessed,
+      lastProb: this.lastProb,
+      inSpeech: this.inSpeech,
+      speechSegments: this.speechSegments,
+      lastFrameAt: this.lastFrameAt,
+    };
+  }
 
   async init(modelUrl: string, wasmBase: string): Promise<void> {
     try {
@@ -110,11 +136,19 @@ export class MainThreadVAD {
     const prob = (results[outputName].data as Float32Array)[0];
     this.state = new Float32Array(results[newStateName].data as Float32Array);
 
+    this.framesProcessed++;
+    this.lastProb = prob;
+    this.lastFrameAt = tFrameStart;
+
     // Hysteresis state machine
     if (!this.inSpeech) {
       if (prob >= this.opts.speechThreshold) {
         if (this.consecutiveSpeechMs === 0) {
-          this.pendingStartTime = tFrameStart - this.opts.speechPadMs / 1000;
+          // Clamp so we never emit a negative AudioContext time near t=0.
+          this.pendingStartTime = Math.max(
+            0,
+            tFrameStart - this.opts.speechPadMs / 1000,
+          );
         }
         this.consecutiveSpeechMs += frameDurMs;
         this.consecutiveSilenceMs = 0;
@@ -122,6 +156,7 @@ export class MainThreadVAD {
           this.inSpeech = true;
           this.lastTransitionTime = this.pendingStartTime;
           this.lastSpeechFrameTime = tFrameStart;
+          this.speechSegments++;
           this.cb.onSpeechStart(this.pendingStartTime);
         }
       } else {

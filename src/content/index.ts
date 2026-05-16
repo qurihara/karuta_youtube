@@ -142,13 +142,29 @@ const attachToVideo = async (video: HTMLVideoElement, settings: Settings) => {
 
     state.hud.setLive(isLiveStream(v));
 
-    // DVR-safe active state: deactivate if the uta target has fallen out
-    // of the seekable buffer (relevant for live with finite DVR window).
+    // DVR-safe active state: deactivate only if the uta time itself has
+    // fallen out of the seekable window. If the rewind target (uta - N)
+    // is before earliest, RewindController clamps the seek — the button
+    // should still be usable.
     const uta = trackerState.lastUtaStartMedia;
     if (uta !== null) {
       const earliest = earliestSeekableTime(v);
-      const reachable = uta - state.settings!.rewindSeconds >= earliest;
-      state.hud.setActive(reachable);
+      state.hud.setActive(uta >= earliest);
+    }
+
+    // Live diagnostics
+    const stats = state.vad?.getStats();
+    if (stats) {
+      const audioFlowing =
+        stats.framesProcessed > 0 &&
+        Math.abs(state.pipeline!.audioCtx.currentTime - stats.lastFrameAt) < 1;
+      const text =
+        `f:${stats.framesProcessed} ` +
+        `p:${stats.lastProb.toFixed(2)} ` +
+        `seg:${stats.speechSegments}` +
+        (stats.inSpeech ? " ●" : "") +
+        (audioFlowing ? "" : " ⚠no-audio");
+      state.hud.setDebug(text, stats.inSpeech);
     }
   }, 200);
 };
