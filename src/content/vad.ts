@@ -21,6 +21,7 @@ export interface VADStats {
   ready: boolean;
   framesProcessed: number;
   lastProb: number;
+  lastPeak: number;
   inSpeech: boolean;
   speechSegments: number;
   lastFrameAt: number;
@@ -43,6 +44,7 @@ export class MainThreadVAD {
   // diagnostics
   private framesProcessed = 0;
   private lastProb = 0;
+  private lastPeak = 0;
   private speechSegments = 0;
   private lastFrameAt = 0;
 
@@ -53,6 +55,7 @@ export class MainThreadVAD {
       ready: this.session !== null,
       framesProcessed: this.framesProcessed,
       lastProb: this.lastProb,
+      lastPeak: this.lastPeak,
       inSpeech: this.inSpeech,
       speechSegments: this.speechSegments,
       lastFrameAt: this.lastFrameAt,
@@ -136,8 +139,14 @@ export class MainThreadVAD {
     const prob = (results[outputName].data as Float32Array)[0];
     this.state = new Float32Array(results[newStateName].data as Float32Array);
 
+    let peak = 0;
+    for (let i = 0; i < pcm.length; i++) {
+      const a = pcm[i] < 0 ? -pcm[i] : pcm[i];
+      if (a > peak) peak = a;
+    }
     this.framesProcessed++;
     this.lastProb = prob;
+    this.lastPeak = peak;
     this.lastFrameAt = tFrameStart;
 
     // Hysteresis state machine

@@ -158,12 +158,20 @@ const attachToVideo = async (video: HTMLVideoElement, settings: Settings) => {
       const audioFlowing =
         stats.framesProcessed > 0 &&
         Math.abs(state.pipeline!.audioCtx.currentTime - stats.lastFrameAt) < 1;
+      const muted = v.muted;
+      const vol = v.volume;
+      const muteWarn =
+        muted || vol < 0.02
+          ? ` ⚠${muted ? "MUTED" : `vol${vol.toFixed(2)}`}`
+          : "";
       const text =
         `f:${stats.framesProcessed} ` +
+        `pk:${stats.lastPeak.toFixed(3)} ` +
         `p:${stats.lastProb.toFixed(2)} ` +
         `seg:${stats.speechSegments}` +
         (stats.inSpeech ? " ●" : "") +
-        (audioFlowing ? "" : " ⚠no-audio");
+        (audioFlowing ? "" : " ⚠no-audio") +
+        muteWarn;
       state.hud.setDebug(text, stats.inSpeech);
     }
   }, 200);
