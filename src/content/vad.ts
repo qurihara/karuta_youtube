@@ -7,6 +7,7 @@
 // WASM compilation is permitted.
 import * as ort from "onnxruntime-web";
 import { DEFAULT_VAD_OPTIONS, type VADOptions } from "../workers/protocol";
+import { log, warn } from "../lib/log";
 
 export interface VADCallbacks {
   onReady?(): void;
@@ -107,8 +108,8 @@ export class MainThreadVAD {
         inputMetadata?: Record<string, { type?: string; dims?: unknown[] }>;
         outputMetadata?: Record<string, { type?: string; dims?: unknown[] }>;
       });
-      console.warn(
-        "[karuta] VAD model loaded:",
+      log(
+        "VAD model loaded:",
         JSON.stringify({
           inputs: this.session.inputNames,
           outputs: this.session.outputNames,
@@ -204,19 +205,13 @@ export class MainThreadVAD {
           probs.push(+(out[oName].data as Float32Array)[0].toFixed(6));
           testState = new Float32Array(out[sName].data as Float32Array);
         } catch (e) {
-          console.warn(
-            "[karuta] self-test threw on",
-            c.name,
-            "frame",
-            f,
-            (e as Error).message,
-          );
+          warn("self-test threw on", c.name, "frame", f, (e as Error).message);
           break;
         }
       }
       results[c.name] = probs;
     }
-    console.warn("[karuta] VAD self-test results:", JSON.stringify(results));
+    log("VAD self-test results:", JSON.stringify(results));
   }
 
   reset(): void {
@@ -313,11 +308,11 @@ export class MainThreadVAD {
     // what the model is actually returning without spamming the console.
     if (
       this.framesProcessed <= 5 ||
-      (this.framesProcessed % 200 === 0) ||
+      this.framesProcessed % 200 === 0 ||
       (rawPeak >= 0.05 && this.framesProcessed % 30 === 0)
     ) {
-      console.warn(
-        "[karuta] vad frame",
+      log(
+        "vad frame",
         this.framesProcessed,
         JSON.stringify({
           rawPeak: +rawPeak.toFixed(4),

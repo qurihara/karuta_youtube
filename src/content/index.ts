@@ -190,8 +190,8 @@ const attachToVideo = async (video: HTMLVideoElement, settings: Settings) => {
         muteWarn;
       state.hud.setDebug(text, stats.inSpeech);
 
-      // Periodic console snapshot every ~3s while peak is zero — easier
-      // to grep than the per-frame VAD logs.
+      // Periodic snapshot every ~3s — only when ?karuta-debug=1 is set so
+      // the console stays clean in normal use.
       const now = Math.floor(ctx.currentTime);
       const tick = (state as { _lastLogTick?: number })._lastLogTick ?? -1;
       if (now !== tick && now % 3 === 0 && now > 0) {
@@ -200,8 +200,8 @@ const attachToVideo = async (video: HTMLVideoElement, settings: Settings) => {
           webkitAudioDecodedByteCount?: number;
           webkitVideoDecodedByteCount?: number;
         };
-        console.warn(
-          "[karuta] snapshot",
+        log(
+          "snapshot",
           JSON.stringify({
             ctxState: ctx.state,
             analyserPeak: +analyserPeak.toFixed(4),

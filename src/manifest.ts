@@ -3,7 +3,7 @@ import { defineManifest } from "@crxjs/vite-plugin";
 export default defineManifest({
   manifest_version: 3,
   name: "Karuta YouTube HUD",
-  version: "0.16.0",
+  version: "0.17.0",
   description: "競技かるた向け、上の句直前にワンクリックで巻き戻すYouTube HUD",
   permissions: ["storage"],
   host_permissions: ["https://www.youtube.com/*"],

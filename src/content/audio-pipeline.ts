@@ -70,29 +70,20 @@ export async function createAudioPipeline(
   };
 
   const vAny = video as unknown as { audioTracks?: { length: number } };
-  console.warn(
-    "[karuta] audio pipeline created",
-    JSON.stringify({
-      sampleRate: audioCtx.sampleRate,
-      state: audioCtx.state,
-      videoSrc: video.currentSrc?.slice(0, 80),
-      audioTracks: vAny.audioTracks?.length ?? null,
-    }),
-  );
-
   log("audio pipeline created", {
     sampleRate: audioCtx.sampleRate,
     state: audioCtx.state,
+    videoSrc: video.currentSrc?.slice(0, 80),
+    audioTracks: vAny.audioTracks?.length ?? null,
   });
 
   const ensureRunning = async () => {
     if (audioCtx.state === "suspended") {
       try {
         await audioCtx.resume();
-        console.warn("[karuta] audioCtx resumed, state=" + audioCtx.state);
+        log("audioCtx resumed, state=" + audioCtx.state);
       } catch (e) {
         warn("audioCtx.resume() failed", e);
-        console.warn("[karuta] audioCtx.resume() failed", e);
       }
     }
   };

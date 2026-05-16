@@ -1,6 +1,6 @@
 {
   "name": "karuta-youtube-hud",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Chrome extension that overlays a rewind-to-just-before-the-reading HUD on YouTube for competitive karuta videos.",
   "private": true,
   "type": "module",
