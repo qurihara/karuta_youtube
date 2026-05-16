@@ -6,15 +6,15 @@ export interface Settings {
 }
 
 export const DEFAULTS: Settings = {
-  rewindSeconds: 2.0,
-  gapThresholdSeconds: 1.5,
+  rewindSeconds: 1.0,
+  gapThresholdSeconds: 0.5,
   hudOpacityIdle: 0.4,
   timelineSeconds: 30,
 };
 
 const RANGES: { [K in keyof Settings]: [number, number] } = {
   rewindSeconds: [0.0, 5.0],
-  gapThresholdSeconds: [0.5, 3.0],
+  gapThresholdSeconds: [0.1, 1.0],
   hudOpacityIdle: [0.1, 1.0],
   timelineSeconds: [10, 60],
 };

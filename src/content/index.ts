@@ -133,13 +133,14 @@ const attachToVideo = async (video: HTMLVideoElement, settings: Settings) => {
 
   await pipeline.ensureRunning();
 
-  // 5fps timeline render + live/DVR state refresh
+  // 5fps timeline render + live/DVR state refresh + HUD layout update
   state.renderInterval = window.setInterval(() => {
     if (!state.tracker || !state.hud || !state.currentVideo) return;
     const v = state.currentVideo;
     const trackerState = state.tracker.getState();
     state.hud.renderTimeline(v.currentTime, trackerState);
 
+    state.hud.updateLayout(v);
     state.hud.setLive(isLiveStream(v));
 
     // DVR-safe active state: deactivate only if the uta time itself has

@@ -109,30 +109,33 @@ export class Hud {
     this.gapSlider = el("input", {
       class: "gap-slider",
       type: "range",
-      min: "0.5",
-      max: "3",
-      step: "0.1",
+      min: "0.1",
+      max: "1",
+      step: "0.05",
     });
-    this.gapValue = el("span", { class: "gap-value" }, ["1.5s"]);
+    this.gapValue = el("span", { class: "gap-value" }, ["0.5s"]);
     const gapRow = el("div", { class: "row n-row" }, [
       el("span", { class: "n-label" }, ["無音閾値"]),
       this.gapSlider,
       this.gapValue,
     ]);
-    this.settingsPanel = el("div", { class: "settings-panel" }, [gapRow]);
+    this.settingsPanel = el("div", { class: "settings-panel open" }, [gapRow]);
 
     this.debugMic = el("span", { class: "mic" });
     this.debugText = el("span", { class: "debug-text" }, ["—"]);
     this.debugLine = el("div", { class: "debug" }, [this.debugMic, this.debugText]);
 
-    const panel = el("div", { class: "panel" }, [
-      topRow,
+    // Everything except the rewind button + gear lives inside .expandable.
+    // The gear toggles `.expanded` on the panel to show/hide this group.
+    const expandable = el("div", { class: "expandable" }, [
       nRow,
+      this.settingsPanel,
       this.canvas,
       statusRow,
       this.debugLine,
-      this.settingsPanel,
     ]);
+
+    const panel = el("div", { class: "panel" }, [topRow, expandable]);
     panel.style.setProperty(
       "--karuta-idle-opacity",
       String(this.settings.hudOpacityIdle),
@@ -171,7 +174,7 @@ export class Hud {
     });
 
     this.gearBtn.addEventListener("click", () => {
-      this.settingsPanel.classList.toggle("open");
+      this.panelRoot.classList.toggle("expanded");
     });
   }
 
@@ -205,6 +208,28 @@ export class Hud {
   setDebug(text: string, micActive: boolean) {
     this.debugText.textContent = text;
     this.debugMic.classList.toggle("active", micActive);
+  }
+
+  /**
+   * Reposition the panel at the bottom-center of the given video element.
+   * Uses viewport-fixed positioning, which works both in normal view and
+   * in fullscreen (the panel is moved inside the fullscreen element by
+   * HudMount on transition).
+   */
+  updateLayout(video: HTMLVideoElement): void {
+    const rect = video.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    // Sit ~64 px above the video's bottom edge to clear YouTube's controls
+    // bar when it's visible.
+    const bottomOffset = 64;
+    const centerX = rect.left + rect.width / 2;
+    const bottomFromViewport = Math.max(
+      8,
+      window.innerHeight - rect.bottom + bottomOffset,
+    );
+    this.panelRoot.style.left = `${centerX}px`;
+    this.panelRoot.style.bottom = `${bottomFromViewport}px`;
+    this.panelRoot.style.top = "auto";
   }
 
   updateSettings(patch: Partial<Settings>) {
