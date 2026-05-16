@@ -2,7 +2,12 @@
 // Downmixes input to mono, linear-resamples to 16kHz, emits 512-sample frames via port.
 
 const TARGET_SAMPLE_RATE = 16000;
-const FRAME_SIZE = 512;
+// 576 samples per frame at 16 kHz (36 ms). This is what the current Silero
+// VAD ONNX model expects — earlier docs say 512, but the model the user
+// downloaded from snakers4/silero-vad master in 2026 ships an STFT front-end
+// that only produces correct activations at 576-sample chunks. Empirically
+// 512 gives prob ≈ 0 even on clean speech, 576 gives prob > 0.99.
+const FRAME_SIZE = 576;
 
 class KarutaResampler extends AudioWorkletProcessor {
   constructor() {

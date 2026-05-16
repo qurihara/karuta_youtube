@@ -15,7 +15,10 @@ export interface VADOptions {
 
 export const DEFAULT_VAD_OPTIONS: VADOptions = {
   sampleRate: 16000,
-  frameSize: 512,
+  // Current Silero VAD ONNX (2026 build, "spox2" producer) needs 576 samples
+  // per chunk at 16 kHz. Older docs say 512 — that's the v5 model. Feeding
+  // 512 silently produces ~0 probability on clean speech.
+  frameSize: 576,
   speechThreshold: 0.5,
   negativeThreshold: 0.35,
   minSpeechMs: 250,
