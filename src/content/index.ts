@@ -19,6 +19,10 @@ import {
   type ToVad,
 } from "../workers/protocol";
 import { log, warn, error } from "../lib/log";
+// `?worker&url` gives us the URL of the bundled worker without invoking the
+// `new Worker(...)` helper Vite emits — we need to load it ourselves via a
+// blob bootstrap (see initVadWorker below).
+import vadWorkerUrl from "../workers/vad-worker.ts?worker&url";
 
 const describeError = (e: unknown): string => {
   if (e instanceof Error) return `${e.name}: ${e.message}`;
@@ -191,11 +195,31 @@ const handleVadMessage = (msg: FromVad) => {
   }
 };
 
+const createExtensionModuleWorker = (absoluteUrl: string): Worker => {
+  // Chrome refuses `new Worker('chrome-extension://...')` from a page
+  // origin like YouTube ("cannot be accessed from origin"). Work around by
+  // creating a same-origin blob whose only job is to dynamic-import the real
+  // worker module from the extension origin. The imported module's
+  // import.meta.url then points back to chrome-extension://, so its own
+  // relative imports (e.g. onnxruntime-web's wasm loader) resolve correctly.
+  const bootstrap = [
+    "self.addEventListener('error', (e) => { try { self.postMessage({type:'error', message:'bootstrap error: '+(e.message||String(e))}); } catch {} });",
+    "self.addEventListener('unhandledrejection', (e) => { try { var r=e.reason; self.postMessage({type:'error', message:'bootstrap rejection: '+((r&&r.message)||String(r))}); } catch {} });",
+    `import(${JSON.stringify(absoluteUrl)}).catch((e) => { try { self.postMessage({type:'error', message:'bootstrap import failed: '+((e&&e.message)||String(e))}); } catch {} });`,
+  ].join("\n");
+  const blob = new Blob([bootstrap], { type: "application/javascript" });
+  const blobUrl = URL.createObjectURL(blob);
+  const w = new Worker(blobUrl, { type: "module" });
+  // Allow generous time for the worker to load before revoking. After
+  // revocation the worker keeps running; only re-loads would fail.
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+  return w;
+};
+
 const initVadWorker = (): Worker => {
-  const w = new Worker(
-    new URL("../workers/vad-worker.ts", import.meta.url),
-    { type: "module" },
-  );
+  const absoluteUrl = new URL(vadWorkerUrl, import.meta.url).href;
+  log("vad worker url", absoluteUrl);
+  const w = createExtensionModuleWorker(absoluteUrl);
   // Register handler BEFORE sending init so early ready/error messages aren't lost.
   w.onmessage = (ev: MessageEvent<FromVad>) => handleVadMessage(ev.data);
   w.onerror = (ev: ErrorEvent) => {
