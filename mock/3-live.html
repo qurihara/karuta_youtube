@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>Karuta YouTube HUD — LIVE</title>
+  <link rel="stylesheet" href="./_base.css" />
+</head>
+<body>
+  <div class="yt-top">
+    <span class="yt-logo">YouTube<span class="red">▶</span></span>
+    <div class="yt-search">かるたライブ配信</div>
+  </div>
+
+  <div class="yt-main">
+    <div>
+      <div class="yt-player">
+        <div class="panel expanded">
+          <div class="row">
+            <button class="rewind-btn active" type="button" title="静粛まで巻き戻し">
+              <span>◀</span><span>静粛まで巻き戻し</span>
+            </button>
+            <button class="gear-btn" type="button" title="詳細設定">⚙</button>
+          </div>
+          <div class="expandable">
+            <div class="row n-row">
+              <span class="n-label">N</span>
+              <input class="n-slider" type="range" min="0" max="5" step="0.1" value="1.0" />
+              <span class="n-value">1.0s</span>
+            </div>
+            <div class="settings-panel">
+              <div class="row n-row">
+                <span class="n-label">無音閾値</span>
+                <input class="gap-slider" type="range" min="0.1" max="1" step="0.05" value="0.5" />
+                <span class="n-value">0.5s</span>
+              </div>
+            </div>
+            <canvas class="timeline" width="340" height="24"></canvas>
+            <div class="status">
+              <span><span class="dot"></span>音声認識準備完了</span>
+              <span class="live-badge on">LIVE</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="caption">ライブ配信にも対応 — DVRバッファ範囲外なら自動でグレー化</div>
+
+        <div class="yt-controls">
+          <div class="play"></div>
+          <div class="time">LIVE</div>
+          <div class="seekbar"></div>
+        </div>
+      </div>
+
+      <div class="yt-meta">
+        <h1>競技かるたライブ配信 (デモ画像)</h1>
+        <div class="sub">配信中 — 視聴者 247人</div>
+      </div>
+    </div>
+
+    <div class="yt-side">
+      <div class="yt-side-item">
+        <div class="yt-side-thumb"></div>
+        <div class="yt-side-text"><div class="t">他のライブ 1</div>配信中</div>
+      </div>
+      <div class="yt-side-item">
+        <div class="yt-side-thumb"></div>
+        <div class="yt-side-text"><div class="t">他のライブ 2</div>配信中</div>
+      </div>
+      <div class="yt-side-item">
+        <div class="yt-side-thumb"></div>
+        <div class="yt-side-text"><div class="t">アーカイブ</div>過去動画</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cnv = document.querySelector("canvas.timeline");
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const rect = cnv.getBoundingClientRect();
+    cnv.width = Math.round(rect.width * dpr);
+    cnv.height = Math.round(rect.height * dpr);
+    const ctx = cnv.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const w = rect.width, h = rect.height;
+    const segments = [
+      [0.05, 0.12], [0.18, 0.25], [0.33, 0.41], [0.48, 0.60],
+      [0.66, 0.74], [0.81, 0.92]
+    ];
+    ctx.fillStyle = "rgba(226, 232, 240, 0.65)";
+    for (const [s, e] of segments) ctx.fillRect(s * w, 4, (e - s) * w, h - 8);
+    const utaX = 0.81 * w;
+    ctx.fillStyle = "#2563eb";
+    ctx.beginPath();
+    ctx.moveTo(utaX, 0); ctx.lineTo(utaX - 5, 6); ctx.lineTo(utaX + 5, 6);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.85)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(w - 0.5, 0); ctx.lineTo(w - 0.5, h);
+    ctx.stroke();
+  </script>
+</body>
+</html>

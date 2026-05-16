@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>Karuta YouTube HUD — Popup ON</title>
+  <link rel="stylesheet" href="./_base.css" />
+  <style>
+    /* Browser-chrome look for popup screenshot */
+    body { background: linear-gradient(180deg, #e8eaed, #c1c4c8); }
+
+    .browser-window {
+      width: 1200px;
+      height: 720px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .browser-chrome {
+      height: 86px;
+      background: #f1f3f4;
+      border-bottom: 1px solid #d8dadc;
+      position: relative;
+    }
+    .tabs-row {
+      height: 38px;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 12px;
+      gap: 4px;
+    }
+    .tab {
+      height: 32px;
+      max-width: 240px;
+      padding: 0 12px;
+      display: flex; align-items: center;
+      background: #fff;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      font-size: 12px;
+      color: #5f6368;
+      gap: 6px;
+    }
+    .tab .dot { width: 14px; height: 14px; background: #ff0033; border-radius: 50%; flex-shrink: 0; }
+    .urlbar-row {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+    }
+    .nav-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: transparent; color: #5f6368;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .urlbar {
+      flex: 1;
+      height: 32px;
+      background: #fff;
+      border: 1px solid #d8dadc;
+      border-radius: 16px;
+      display: flex; align-items: center;
+      padding: 0 14px;
+      font-size: 13px;
+      color: #202124;
+    }
+    .ext-icons {
+      display: flex; align-items: center; gap: 6px;
+      position: relative;
+    }
+    .ext-icon {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      color: #5f6368;
+    }
+    .ext-icon.karuta {
+      background: #2563eb;
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+    }
+
+    /* Popup callout arrow + popup */
+    .popup-container {
+      position: absolute;
+      top: 90px;
+      right: 60px;
+      width: 320px;
+      background: #f7f7f9;
+      border-radius: 8px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      font-size: 13px;
+      color: #1d1d1f;
+    }
+    .popup-container::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      right: 60px;
+      width: 14px;
+      height: 14px;
+      background: #1a1a1a;
+      transform: rotate(45deg);
+    }
+    .popup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #1a1a1a;
+      color: #fff;
+      position: relative;
+    }
+    .popup-header h1 {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+    }
+    .switch {
+      position: relative; display: inline-block;
+      width: 38px; height: 22px;
+    }
+    .switch span {
+      position: absolute; inset: 0;
+      border-radius: 22px;
+      background: #34c759;
+    }
+    .switch span::before {
+      content: ""; position: absolute;
+      height: 16px; width: 16px; left: auto; right: 3px; bottom: 3px;
+      background: #fff; border-radius: 50%;
+    }
+    .switch.off span { background: #555; }
+    .switch.off span::before { right: auto; left: 3px; }
+    .popup-section { padding: 12px; }
+    .hint { margin: 0 0 8px 0; font-size: 12px; line-height: 1.5; }
+    .hint.dim { color: #6b6b6b; }
+    .popup-footer {
+      padding: 8px 12px;
+      font-size: 11px;
+      color: #777;
+      border-top: 1px solid #eee;
+      background: #fafafa;
+    }
+
+    /* Background page hint */
+    .page-bg {
+      flex: 1;
+      background:
+        radial-gradient(120% 80% at 50% 40%, #1c2a3a 0%, #0a0f17 60%, #050608 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 14px;
+    }
+    .caption-2 {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="browser-window">
+    <div class="browser-chrome">
+      <div class="tabs-row">
+        <div class="tab"><span class="dot"></span><span>YouTube — 競技かるた決勝</span></div>
+      </div>
+      <div class="urlbar-row">
+        <span class="nav-btn">←</span>
+        <span class="nav-btn">→</span>
+        <span class="nav-btn">⟳</span>
+        <div class="urlbar">https://www.youtube.com/watch?v=…</div>
+        <div class="ext-icons">
+          <div class="ext-icon">⚙</div>
+          <div class="ext-icon karuta">K</div>
+        </div>
+      </div>
+
+      <div class="popup-container">
+        <div class="popup-header">
+          <h1>Karuta YouTube HUD</h1>
+          <label class="switch"><span></span></label>
+        </div>
+        <div class="popup-section">
+          <p class="hint">YouTubeの競技かるた動画で、上の句直前にワンクリックで巻き戻すHUDを表示します。</p>
+          <p class="hint dim">OFFにすると音声認識・HUD表示の両方が停止します。設定の細部はHUDの⚙ボタンから。</p>
+        </div>
+        <div class="popup-footer">変更は開いているYouTubeタブに即時反映されます。</div>
+      </div>
+    </div>
+
+    <div class="page-bg">
+      ツールバーのアイコンから ON / OFF
+      <div class="caption-2">スイッチ ON — 緑 = 認識中</div>
+    </div>
+  </div>
+</body>
+</html>
