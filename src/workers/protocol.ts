@@ -1,4 +1,7 @@
-export const PROTOCOL_VERSION = 1;
+// Shared VAD configuration. Previously this file also defined a worker
+// message protocol; VAD now runs on the main thread (see src/content/vad.ts)
+// because MV3 + YouTube CSP refuse Workers from chrome-extension:// and
+// blob: URLs from the page origin.
 
 export interface VADOptions {
   sampleRate: 16000;
@@ -19,24 +22,3 @@ export const DEFAULT_VAD_OPTIONS: VADOptions = {
   minSilenceMs: 200,
   speechPadMs: 100,
 };
-
-export type ToVad =
-  | {
-      type: "init";
-      version: number;
-      modelUrl: string;
-      opts: VADOptions;
-    }
-  | {
-      type: "audio";
-      pcm: Float32Array;
-      tFrameStart: number;
-    }
-  | { type: "reset" }
-  | { type: "configure"; opts: Partial<VADOptions> };
-
-export type FromVad =
-  | { type: "ready" }
-  | { type: "speech-start"; tStart: number }
-  | { type: "speech-end"; tStart: number; tEnd: number }
-  | { type: "error"; message: string };
