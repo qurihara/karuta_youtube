@@ -168,7 +168,7 @@ const attachToVideo = async (video: HTMLVideoElement, settings: Settings) => {
         `f:${stats.framesProcessed} ` +
         `pk:${stats.lastPeak.toFixed(3)} ` +
         `g:${stats.agcGain.toFixed(1)}x ` +
-        `p:${stats.lastProb.toFixed(2)} ` +
+        `p:${stats.lastProb.toFixed(4)} ` +
         `seg:${stats.speechSegments} ` +
         `yt:${vol.toFixed(2)}` +
         (stats.inSpeech ? " ●" : "") +

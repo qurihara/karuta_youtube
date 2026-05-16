@@ -93,6 +93,17 @@ export class MainThreadVAD {
       this.session = await ort.InferenceSession.create(buf, {
         executionProviders: ["wasm"],
       });
+      // Surface the model signature so we can confirm we're hitting the
+      // Silero v5 ports ("input"/"state"/"sr" → "output"/"stateN").
+      // Wrong names or shapes would normally throw at run-time, but a
+      // model that returns prob 0 forever needs verification.
+      console.warn(
+        "[karuta] VAD model loaded:",
+        JSON.stringify({
+          inputs: this.session.inputNames,
+          outputs: this.session.outputNames,
+        }),
+      );
       this.reset();
       this.cb.onReady?.();
     } catch (e) {
@@ -187,6 +198,30 @@ export class MainThreadVAD {
     this.framesProcessed++;
     this.lastProb = prob;
     this.lastFrameAt = tFrameStart;
+
+    // Dump detail for a handful of early frames and then periodically
+    // for frames with a noteworthy raw peak (≥ 0.05). This lets us see
+    // what the model is actually returning without spamming the console.
+    if (
+      this.framesProcessed <= 5 ||
+      (this.framesProcessed % 200 === 0) ||
+      (rawPeak >= 0.05 && this.framesProcessed % 30 === 0)
+    ) {
+      console.warn(
+        "[karuta] vad frame",
+        this.framesProcessed,
+        JSON.stringify({
+          rawPeak: +rawPeak.toFixed(4),
+          gain: +this.currentGain.toFixed(2),
+          boostedPeak: +(rawPeak * this.currentGain).toFixed(4),
+          prob: +prob.toFixed(6),
+          firstRaw: Array.from(pcm.slice(0, 5)).map((x) => +x.toFixed(4)),
+          firstBoosted: Array.from(boosted.slice(0, 5)).map(
+            (x) => +x.toFixed(4),
+          ),
+        }),
+      );
+    }
 
     // Hysteresis state machine
     if (!this.inSpeech) {
