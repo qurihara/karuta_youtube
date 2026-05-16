@@ -1,0 +1,198 @@
+:host {
+  all: initial;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.panel {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.78);
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 220px;
+  font-size: 12px;
+  line-height: 1.2;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  opacity: var(--karuta-idle-opacity, 0.4);
+  transition: opacity 120ms ease-out;
+  user-select: none;
+}
+
+.panel:hover {
+  opacity: 1;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rewind-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #ffffff;
+  background: #6b7280;
+  transition: background 160ms ease, transform 80ms ease;
+}
+
+.rewind-btn.active {
+  background: #2563eb;
+}
+
+.rewind-btn.active:hover {
+  background: #1d4ed8;
+}
+
+.rewind-btn.inactive {
+  background: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.rewind-btn:active.active {
+  transform: scale(0.97);
+}
+
+.n-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.n-label {
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+.n-slider {
+  flex: 1;
+  accent-color: #2563eb;
+}
+
+.n-value {
+  width: 36px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #f1f5f9;
+}
+
+.timeline {
+  width: 100%;
+  height: 24px;
+  border-radius: 4px;
+  background: rgba(30, 41, 59, 0.5);
+  display: block;
+}
+
+.gear-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 13px;
+}
+
+.gear-btn:hover {
+  color: #f1f5f9;
+}
+
+.settings-panel {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.settings-panel.open {
+  display: flex;
+}
+
+.status {
+  font-size: 10px;
+  color: #94a3b8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-badge {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.live-badge.on {
+  display: inline-flex;
+}
+
+.live-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: inline-block;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6b7280;
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.dot.ready {
+  background: #22c55e;
+}
+
+.dot.loading {
+  background: #f59e0b;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.dot.error {
+  background: #ef4444;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
