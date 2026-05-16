@@ -7,13 +7,18 @@ export default defineConfig({
   plugins: [
     crx({ manifest }),
     viteStaticCopy({
+      // Only ship the files onnxruntime-web actually fetches at runtime
+      // with our config (executionProviders=['wasm'], numThreads=1).
+      // The /wasm subpath bundle references the plain (non-jsep,
+      // non-jspi, non-asyncify) WASM loader, so that's all we need.
+      // Skipping the others cuts ~60 MB from the packaged zip.
       targets: [
         {
-          src: "node_modules/onnxruntime-web/dist/*.wasm",
+          src: "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm",
           dest: "assets",
         },
         {
-          src: "node_modules/onnxruntime-web/dist/*.mjs",
+          src: "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs",
           dest: "assets",
         },
       ],

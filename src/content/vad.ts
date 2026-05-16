@@ -5,7 +5,12 @@
 // per frame (~1–5ms for Silero) so running on the content script's main
 // thread is fine. YouTube CSP includes `'unsafe-eval'`, so onnxruntime-web's
 // WASM compilation is permitted.
-import * as ort from "onnxruntime-web";
+// Import the WASM-only build of onnxruntime-web. The default entry
+// (onnxruntime-web) pulls in the WebGPU/JSEP loader which references a
+// 26 MB jsep.wasm we never use, since we run with executionProviders:
+// ["wasm"]. The /wasm subpath bundles only the WASM backend and shaves
+// ~40 MB off the packaged zip.
+import * as ort from "onnxruntime-web/wasm";
 import { DEFAULT_VAD_OPTIONS, type VADOptions } from "../workers/protocol";
 import { log, warn } from "../lib/log";
 
