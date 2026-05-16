@@ -20,6 +20,14 @@ import {
 } from "../workers/protocol";
 import { log, warn, error } from "../lib/log";
 
+const describeError = (e: unknown): string => {
+  if (e instanceof Error) return `${e.name}: ${e.message}`;
+  if (e && typeof e === "object" && "message" in e) {
+    return String((e as { message: unknown }).message);
+  }
+  return String(e);
+};
+
 // Worklet is plain JS in public/, served via the extension. Worker is bundled by Vite.
 const WORKLET_URL = chrome.runtime.getURL("worklets/resampler.js");
 const VAD_MODEL_URL = chrome.runtime.getURL("models/silero_vad.onnx");
@@ -266,12 +274,17 @@ const main = async () => {
       const video = await waitForVideo();
       await attachToVideo(video, state.settings!);
     } catch (e) {
-      warn("attachToVideo failed", e);
-      hud.setStatus("error", "動画取得失敗");
+      warn("attachToVideo failed", describeError(e), e);
+      hud.setStatus("error", `動画取得失敗: ${describeError(e)}`);
     }
   });
 };
 
 main().catch((e) => {
-  error("main failed", e);
+  error("main failed", describeError(e), e);
+  try {
+    state.hud?.setStatus("error", `起動失敗: ${describeError(e)}`);
+  } catch {
+    // ignore
+  }
 });

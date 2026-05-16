@@ -11,6 +11,24 @@ export interface HudCallbacks {
   onGapChange(value: number): void;
 }
 
+type Attrs = Record<string, string>;
+
+const el = <K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  attrs: Attrs = {},
+  children: (Node | string)[] = [],
+): HTMLElementTagNameMap[K] => {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") node.className = v;
+    else node.setAttribute(k, v);
+  }
+  for (const c of children) {
+    node.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return node;
+};
+
 export class Hud {
   private readonly host: HTMLDivElement;
   private readonly shadow: ShadowRoot;
@@ -25,6 +43,7 @@ export class Hud {
   private readonly statusDot: HTMLSpanElement;
   private readonly statusText: HTMLSpanElement;
   private readonly liveBadge: HTMLSpanElement;
+  private readonly panelRoot: HTMLDivElement;
   private readonly timeline: TimelineRenderer;
 
   private active = false;
@@ -41,49 +60,77 @@ export class Hud {
     style.textContent = cssText;
     this.shadow.appendChild(style);
 
-    const panel = document.createElement("div");
-    panel.className = "panel";
-    panel.style.setProperty("--karuta-idle-opacity", String(this.settings.hudOpacityIdle));
+    // Construct via DOM APIs (avoids Trusted Types restrictions that
+    // YouTube enforces — innerHTML throws a TrustedTypePolicyViolationError
+    // DOMException on this page).
+    this.rewindBtn = el(
+      "button",
+      { class: "rewind-btn inactive", type: "button", title: "読みの直前に戻す" },
+      [el("span", {}, ["◀"]), el("span", {}, ["読みの直前に戻す"])],
+    );
+    this.gearBtn = el(
+      "button",
+      { class: "gear-btn", type: "button", title: "詳細設定" },
+      ["⚙"],
+    );
+    const topRow = el("div", { class: "row" }, [this.rewindBtn, this.gearBtn]);
 
-    panel.innerHTML = `
-      <div class="row">
-        <button class="rewind-btn inactive" type="button" title="読みの直前に戻す">
-          <span>◀</span><span>読みの直前に戻す</span>
-        </button>
-        <button class="gear-btn" type="button" title="詳細設定">⚙</button>
-      </div>
-      <div class="row n-row">
-        <span class="n-label">N</span>
-        <input class="n-slider" type="range" min="0" max="5" step="0.1" />
-        <span class="n-value">2.0s</span>
-      </div>
-      <canvas class="timeline" width="240" height="24"></canvas>
-      <div class="status">
-        <span><span class="dot loading"></span><span class="status-text">起動中</span></span>
-        <span class="live-badge">LIVE</span>
-      </div>
-      <div class="settings-panel">
-        <div class="row n-row">
-          <span class="n-label">無音閾値</span>
-          <input class="gap-slider" type="range" min="0.5" max="3" step="0.1" />
-          <span class="gap-value">1.5s</span>
-        </div>
-      </div>
-    `;
+    this.nSlider = el("input", {
+      class: "n-slider",
+      type: "range",
+      min: "0",
+      max: "5",
+      step: "0.1",
+    });
+    this.nValue = el("span", { class: "n-value" }, ["2.0s"]);
+    const nRow = el("div", { class: "row n-row" }, [
+      el("span", { class: "n-label" }, ["N"]),
+      this.nSlider,
+      this.nValue,
+    ]);
 
+    this.canvas = el("canvas", {
+      class: "timeline",
+      width: "240",
+      height: "24",
+    });
+
+    this.statusDot = el("span", { class: "dot loading" });
+    this.statusText = el("span", { class: "status-text" }, ["起動中"]);
+    this.liveBadge = el("span", { class: "live-badge" }, ["LIVE"]);
+    const statusRow = el("div", { class: "status" }, [
+      el("span", {}, [this.statusDot, this.statusText]),
+      this.liveBadge,
+    ]);
+
+    this.gapSlider = el("input", {
+      class: "gap-slider",
+      type: "range",
+      min: "0.5",
+      max: "3",
+      step: "0.1",
+    });
+    this.gapValue = el("span", { class: "gap-value" }, ["1.5s"]);
+    const gapRow = el("div", { class: "row n-row" }, [
+      el("span", { class: "n-label" }, ["無音閾値"]),
+      this.gapSlider,
+      this.gapValue,
+    ]);
+    this.settingsPanel = el("div", { class: "settings-panel" }, [gapRow]);
+
+    const panel = el("div", { class: "panel" }, [
+      topRow,
+      nRow,
+      this.canvas,
+      statusRow,
+      this.settingsPanel,
+    ]);
+    panel.style.setProperty(
+      "--karuta-idle-opacity",
+      String(this.settings.hudOpacityIdle),
+    );
+    this.panelRoot = panel;
     this.shadow.appendChild(panel);
-
-    this.rewindBtn = panel.querySelector(".rewind-btn") as HTMLButtonElement;
-    this.nSlider = panel.querySelector(".n-slider") as HTMLInputElement;
-    this.nValue = panel.querySelector(".n-value") as HTMLSpanElement;
-    this.gapSlider = panel.querySelector(".gap-slider") as HTMLInputElement;
-    this.gapValue = panel.querySelector(".gap-value") as HTMLSpanElement;
-    this.canvas = panel.querySelector(".timeline") as HTMLCanvasElement;
-    this.settingsPanel = panel.querySelector(".settings-panel") as HTMLDivElement;
-    this.gearBtn = panel.querySelector(".gear-btn") as HTMLButtonElement;
-    this.statusDot = panel.querySelector(".dot") as HTMLSpanElement;
-    this.statusText = panel.querySelector(".status-text") as HTMLSpanElement;
-    this.liveBadge = panel.querySelector(".live-badge") as HTMLSpanElement;
 
     this.nSlider.value = String(this.settings.rewindSeconds);
     this.nValue.textContent = `${this.settings.rewindSeconds.toFixed(1)}s`;
