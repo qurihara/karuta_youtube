@@ -68,8 +68,8 @@ export class Hud {
     // DOMException on this page).
     this.rewindBtn = el(
       "button",
-      { class: "rewind-btn inactive", type: "button", title: "読みの直前に戻す" },
-      [el("span", {}, ["◀"]), el("span", {}, ["読みの直前に戻す"])],
+      { class: "rewind-btn inactive", type: "button", title: "静粛まで巻き戻し" },
+      [el("span", {}, ["◀"]), el("span", {}, ["静粛まで巻き戻し"])],
     );
     this.gearBtn = el(
       "button",
@@ -211,7 +211,7 @@ export class Hud {
   }
 
   /**
-   * Reposition the panel at the bottom-center of the given video element.
+   * Reposition the panel at the top-center of the given video element.
    * Uses viewport-fixed positioning, which works both in normal view and
    * in fullscreen (the panel is moved inside the fullscreen element by
    * HudMount on transition).
@@ -219,17 +219,13 @@ export class Hud {
   updateLayout(video: HTMLVideoElement): void {
     const rect = video.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
-    // Sit ~64 px above the video's bottom edge to clear YouTube's controls
-    // bar when it's visible.
-    const bottomOffset = 64;
+    // Sit ~16 px below the video's top edge.
+    const topOffset = 16;
     const centerX = rect.left + rect.width / 2;
-    const bottomFromViewport = Math.max(
-      8,
-      window.innerHeight - rect.bottom + bottomOffset,
-    );
+    const topFromViewport = Math.max(8, rect.top + topOffset);
     this.panelRoot.style.left = `${centerX}px`;
-    this.panelRoot.style.bottom = `${bottomFromViewport}px`;
-    this.panelRoot.style.top = "auto";
+    this.panelRoot.style.top = `${topFromViewport}px`;
+    this.panelRoot.style.bottom = "auto";
   }
 
   updateSettings(patch: Partial<Settings>) {
