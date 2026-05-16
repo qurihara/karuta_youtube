@@ -116,36 +116,7 @@ const attachToVideo = async (video: HTMLVideoElement, settings: Settings) => {
     },
   });
 
-  // Wire VAD events
-  state.vadWorker!.onmessage = (ev: MessageEvent<FromVad>) => {
-    const msg = ev.data;
-    switch (msg.type) {
-      case "ready":
-        state.hud?.setStatus("ready", "音声認識準備完了");
-        log("vad ready");
-        break;
-      case "speech-start": {
-        const tm = state.timeMapper?.toMediaTime(msg.tStart);
-        if (tm !== null && tm !== undefined) {
-          state.tracker?.onSpeechStart(tm);
-        } else {
-          log("speech-start dropped (unstable time)");
-        }
-        break;
-      }
-      case "speech-end": {
-        const tEnd = state.timeMapper?.toMediaTime(msg.tEnd);
-        if (tEnd !== null && tEnd !== undefined) {
-          state.tracker?.onSpeechEnd(tEnd);
-        }
-        break;
-      }
-      case "error":
-        error("vad error", msg.message);
-        state.hud?.setStatus("error", "VADエラー");
-        break;
-    }
-  };
+  // (VAD onmessage handler is already wired in initVadWorker.)
 
   // Reset VAD on seek/pause
   const seekHandler = () => {
@@ -183,11 +154,52 @@ const attachToVideo = async (video: HTMLVideoElement, settings: Settings) => {
   }, 200);
 };
 
+const handleVadMessage = (msg: FromVad) => {
+  switch (msg.type) {
+    case "ready":
+      state.hud?.setStatus("ready", "音声認識準備完了");
+      log("vad ready");
+      break;
+    case "speech-start": {
+      const tm = state.timeMapper?.toMediaTime(msg.tStart);
+      if (tm !== null && tm !== undefined) {
+        state.tracker?.onSpeechStart(tm);
+      } else {
+        log("speech-start dropped (unstable time)");
+      }
+      break;
+    }
+    case "speech-end": {
+      const tEnd = state.timeMapper?.toMediaTime(msg.tEnd);
+      if (tEnd !== null && tEnd !== undefined) {
+        state.tracker?.onSpeechEnd(tEnd);
+      }
+      break;
+    }
+    case "error":
+      error("vad error", msg.message);
+      state.hud?.setStatus("error", `VADエラー: ${msg.message}`);
+      break;
+  }
+};
+
 const initVadWorker = (): Worker => {
   const w = new Worker(
     new URL("../workers/vad-worker.ts", import.meta.url),
     { type: "module" },
   );
+  // Register handler BEFORE sending init so early ready/error messages aren't lost.
+  w.onmessage = (ev: MessageEvent<FromVad>) => handleVadMessage(ev.data);
+  w.onerror = (ev: ErrorEvent) => {
+    error("vad worker onerror", ev.message, ev.filename, ev.lineno);
+    state.hud?.setStatus(
+      "error",
+      `Workerエラー: ${ev.message || "unknown"}`,
+    );
+  };
+  w.onmessageerror = (ev) => {
+    error("vad worker onmessageerror", ev);
+  };
   w.postMessage({
     type: "init",
     version: PROTOCOL_VERSION,

@@ -45,20 +45,29 @@ async function init(modelUrl: string, version: number, initOpts: VADOptions) {
   }
   opts = initOpts;
   try {
-    // wasmPaths is set by the content script via a structured message, but
-    // onnxruntime-web in worker context defaults to relative — we set absolute
-    // path via the init message's modelUrl base.
     const base = modelUrl.substring(0, modelUrl.lastIndexOf("/") + 1);
-    ort.env.wasm.wasmPaths = base.replace(/models\/$/, "assets/");
+    const wasmBase = base.replace(/models\/$/, "assets/");
+    ort.env.wasm.wasmPaths = wasmBase;
     ort.env.wasm.numThreads = 1;
+    ort.env.wasm.proxy = false;
+    ort.env.logLevel = "warning";
 
-    session = await ort.InferenceSession.create(modelUrl, {
+    // Fetch the model ourselves so we can fail fast with a clear error if
+    // the file is missing (otherwise ort can hang opaquely).
+    const res = await fetch(modelUrl);
+    if (!res.ok) {
+      throw new Error(`model fetch ${res.status} ${res.statusText} (${modelUrl})`);
+    }
+    const buf = new Uint8Array(await res.arrayBuffer());
+
+    session = await ort.InferenceSession.create(buf, {
       executionProviders: ["wasm"],
     });
     resetStreamState();
     post({ type: "ready" });
   } catch (e) {
-    post({ type: "error", message: `vad init failed: ${(e as Error).message}` });
+    const message = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+    post({ type: "error", message: `vad init failed: ${message}` });
   }
 }
 
@@ -128,18 +137,32 @@ async function processFrame(pcm: Float32Array, tFrameStart: number) {
 
 self.onmessage = async (ev: MessageEvent<ToVad>) => {
   const msg = ev.data;
-  switch (msg.type) {
-    case "init":
-      await init(msg.modelUrl, msg.version, msg.opts);
-      break;
-    case "audio":
-      await processFrame(msg.pcm, msg.tFrameStart);
-      break;
-    case "reset":
-      resetStreamState();
-      break;
-    case "configure":
-      opts = { ...opts, ...msg.opts };
-      break;
+  try {
+    switch (msg.type) {
+      case "init":
+        await init(msg.modelUrl, msg.version, msg.opts);
+        break;
+      case "audio":
+        await processFrame(msg.pcm, msg.tFrameStart);
+        break;
+      case "reset":
+        resetStreamState();
+        break;
+      case "configure":
+        opts = { ...opts, ...msg.opts };
+        break;
+    }
+  } catch (e) {
+    const m = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+    post({ type: "error", message: `worker handler failed (${msg.type}): ${m}` });
   }
 };
+
+self.addEventListener("error", (ev: ErrorEvent) => {
+  post({ type: "error", message: `worker error: ${ev.message} @ ${ev.filename}:${ev.lineno}` });
+});
+
+self.addEventListener("unhandledrejection", (ev: PromiseRejectionEvent) => {
+  const reason = ev.reason instanceof Error ? `${ev.reason.name}: ${ev.reason.message}` : String(ev.reason);
+  post({ type: "error", message: `unhandled rejection: ${reason}` });
+});
