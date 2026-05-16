@@ -154,27 +154,60 @@ const attachToVideo = async (video: HTMLVideoElement, settings: Settings) => {
 
     // Live diagnostics
     const stats = state.vad?.getStats();
-    if (stats) {
+    if (stats && state.pipeline) {
+      const ctx = state.pipeline.audioCtx;
+      const analyserPeak = state.pipeline.probeAnalyser();
       const audioFlowing =
         stats.framesProcessed > 0 &&
-        Math.abs(state.pipeline!.audioCtx.currentTime - stats.lastFrameAt) < 1;
+        Math.abs(ctx.currentTime - stats.lastFrameAt) < 1;
       const vol = v.volume;
       const muteWarn = v.muted
         ? " ⚠MUTED"
         : vol < 0.02
           ? ` ⚠vol${vol.toFixed(2)}`
           : "";
+      const stateWarn = ctx.state !== "running" ? ` ⚠${ctx.state}` : "";
       const text =
         `f:${stats.framesProcessed} ` +
         `pk:${stats.lastPeak.toFixed(3)} ` +
+        `aPk:${analyserPeak.toFixed(3)} ` +
         `g:${stats.agcGain.toFixed(1)}x ` +
         `p:${stats.lastProb.toFixed(4)} ` +
         `seg:${stats.speechSegments} ` +
-        `yt:${vol.toFixed(2)}` +
+        `yt:${vol.toFixed(2)} ` +
+        `ctx:${ctx.state[0]}` +
         (stats.inSpeech ? " ●" : "") +
         (audioFlowing ? "" : " ⚠no-audio") +
+        stateWarn +
         muteWarn;
       state.hud.setDebug(text, stats.inSpeech);
+
+      // Periodic console snapshot every ~3s while peak is zero — easier
+      // to grep than the per-frame VAD logs.
+      const now = Math.floor(ctx.currentTime);
+      const tick = (state as { _lastLogTick?: number })._lastLogTick ?? -1;
+      if (now !== tick && now % 3 === 0 && now > 0) {
+        (state as { _lastLogTick?: number })._lastLogTick = now;
+        const vAny = v as unknown as {
+          webkitAudioDecodedByteCount?: number;
+          webkitVideoDecodedByteCount?: number;
+        };
+        console.warn(
+          "[karuta] snapshot",
+          JSON.stringify({
+            ctxState: ctx.state,
+            analyserPeak: +analyserPeak.toFixed(4),
+            workletPeak: +stats.lastPeak.toFixed(4),
+            framesProcessed: stats.framesProcessed,
+            prob: +stats.lastProb.toFixed(4),
+            videoPaused: v.paused,
+            videoReadyState: v.readyState,
+            videoCurrentTime: +v.currentTime.toFixed(2),
+            audioDecodedBytes: vAny.webkitAudioDecodedByteCount ?? null,
+            videoDecodedBytes: vAny.webkitVideoDecodedByteCount ?? null,
+          }),
+        );
+      }
     }
   }, 200);
 };

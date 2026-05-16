@@ -10,6 +10,9 @@ export interface AudioPipeline {
   audioCtx: AudioContext;
   source: MediaElementAudioSourceNode;
   worklet: AudioWorkletNode;
+  analyser: AnalyserNode;
+  /** Peak amplitude observed in the most recent AnalyserNode sample (0..1). */
+  probeAnalyser(): number;
   destroy(): void;
   ensureRunning(): Promise<void>;
 }
@@ -43,8 +46,38 @@ export async function createAudioPipeline(
     }
   };
 
+  // Parallel diagnostic path. AnalyserNode taps the raw source signal at
+  // native sample rate, independent of the worklet/resampler. If this also
+  // reads zero, the issue is upstream (YouTube isn't actually feeding
+  // audio into the MediaElementAudioSourceNode).
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 2048;
+  analyser.smoothingTimeConstant = 0;
+  const probeBuf = new Float32Array(analyser.fftSize);
+
   source.connect(audioCtx.destination);
   source.connect(worklet);
+  source.connect(analyser);
+
+  const probeAnalyser = (): number => {
+    analyser.getFloatTimeDomainData(probeBuf);
+    let peak = 0;
+    for (let i = 0; i < probeBuf.length; i++) {
+      const a = probeBuf[i] < 0 ? -probeBuf[i] : probeBuf[i];
+      if (a > peak) peak = a;
+    }
+    return peak;
+  };
+
+  console.warn(
+    "[karuta] audio pipeline created",
+    JSON.stringify({
+      sampleRate: audioCtx.sampleRate,
+      state: audioCtx.state,
+      videoSrc: video.currentSrc?.slice(0, 80),
+      audioTracks: video.audioTracks?.length,
+    }),
+  );
 
   log("audio pipeline created", {
     sampleRate: audioCtx.sampleRate,
@@ -55,8 +88,10 @@ export async function createAudioPipeline(
     if (audioCtx.state === "suspended") {
       try {
         await audioCtx.resume();
+        console.warn("[karuta] audioCtx resumed, state=" + audioCtx.state);
       } catch (e) {
         warn("audioCtx.resume() failed", e);
+        console.warn("[karuta] audioCtx.resume() failed", e);
       }
     }
   };
@@ -78,5 +113,5 @@ export async function createAudioPipeline(
     // to destination so user keeps hearing audio.
   };
 
-  return { audioCtx, source, worklet, destroy, ensureRunning };
+  return { audioCtx, source, worklet, analyser, probeAnalyser, destroy, ensureRunning };
 }
