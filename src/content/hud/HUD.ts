@@ -195,6 +195,19 @@ export class Hud {
     this.rewindBtn.classList.toggle("inactive", !active);
   }
 
+  /**
+   * Fire a one-shot flash animation on the rewind button — used when the
+   * tracker detects a new uta candidate so the user can tell the rewind
+   * target just moved, even if the button was already active.
+   */
+  flashUtaUpdate() {
+    this.rewindBtn.classList.remove("flash");
+    // Force a reflow so removing and re-adding the class restarts the
+    // animation cleanly even when fires arrive back-to-back.
+    void this.rewindBtn.offsetWidth;
+    this.rewindBtn.classList.add("flash");
+  }
+
   setStatus(status: HudStatus, text: string) {
     this.statusDot.classList.remove("loading", "ready", "error");
     this.statusDot.classList.add(status);

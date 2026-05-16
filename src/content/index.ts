@@ -109,8 +109,15 @@ const attachToVideo = async (video: HTMLVideoElement, settings: Settings) => {
   state.timeMapper = new TimeMapper(video, pipeline.audioCtx);
 
   state.tracker = new SegmentTracker(settings.gapThresholdSeconds, {
-    onActiveChange: (active) => {
+    onActiveChange: (active, utaStartMedia) => {
       state.hud?.setActive(active);
+      // Tracker fires this every time a new uta candidate is set, even when
+      // the button was already active from the previous one — that's the
+      // signal that the rewind target just moved, so we flash to draw the
+      // viewer's attention.
+      if (active && utaStartMedia !== null) {
+        state.hud?.flashUtaUpdate();
+      }
     },
     onSegmentsChange: () => {
       // timeline render happens on interval
