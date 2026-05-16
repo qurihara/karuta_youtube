@@ -22,10 +22,20 @@ export interface VADStats {
   framesProcessed: number;
   lastProb: number;
   lastPeak: number;
+  agcGain: number;
   inSpeech: boolean;
   speechSegments: number;
   lastFrameAt: number;
 }
+
+// Simple peak-tracking AGC. Karuta videos can be mastered quietly and/or
+// the user can have the YouTube volume slider below 100 %, both of which
+// attenuate the samples reaching MediaElementAudioSourceNode and starve
+// Silero VAD. We push the recent peak toward TARGET_PEAK with a one-shot
+// attack and a ~1s release.
+const AGC_TARGET_PEAK = 0.5;
+const AGC_MAX_GAIN = 16;
+const AGC_RELEASE_PER_FRAME = 0.98; // ~31 frames per second at 32ms each
 
 export class MainThreadVAD {
   private session: ort.InferenceSession | null = null;
@@ -40,6 +50,10 @@ export class MainThreadVAD {
   private consecutiveSilenceMs = 0;
   private pendingStartTime = 0;
   private lastSpeechFrameTime = 0;
+
+  // AGC state
+  private runningPeak = 0;
+  private currentGain = 1;
 
   // diagnostics
   private framesProcessed = 0;
@@ -56,6 +70,7 @@ export class MainThreadVAD {
       framesProcessed: this.framesProcessed,
       lastProb: this.lastProb,
       lastPeak: this.lastPeak,
+      agcGain: this.currentGain,
       inSpeech: this.inSpeech,
       speechSegments: this.speechSegments,
       lastFrameAt: this.lastFrameAt,
@@ -94,6 +109,8 @@ export class MainThreadVAD {
     this.pendingStartTime = 0;
     this.lastSpeechFrameTime = 0;
     this.lastTransitionTime = 0;
+    this.runningPeak = 0;
+    this.currentGain = 1;
     // Drain queued frames so the next frame starts cleanly after a seek.
     this.queue = Promise.resolve();
   }
@@ -118,7 +135,35 @@ export class MainThreadVAD {
 
     const frameDurMs = (this.opts.frameSize / this.opts.sampleRate) * 1000;
 
-    const inputTensor = new ort.Tensor("float32", pcm, [1, pcm.length]);
+    // Measure raw peak before AGC (for diagnostics).
+    let rawPeak = 0;
+    for (let i = 0; i < pcm.length; i++) {
+      const a = pcm[i] < 0 ? -pcm[i] : pcm[i];
+      if (a > rawPeak) rawPeak = a;
+    }
+    this.lastPeak = rawPeak;
+
+    // Update running peak with attack=immediate, release per frame.
+    this.runningPeak = Math.max(
+      rawPeak,
+      this.runningPeak * AGC_RELEASE_PER_FRAME,
+    );
+    this.currentGain =
+      this.runningPeak > 0.001
+        ? Math.min(AGC_MAX_GAIN, AGC_TARGET_PEAK / this.runningPeak)
+        : 1;
+
+    // Apply gain with hard clip. Reuse a scratch buffer to avoid GC churn.
+    const boosted = new Float32Array(pcm.length);
+    const g = this.currentGain;
+    for (let i = 0; i < pcm.length; i++) {
+      let s = pcm[i] * g;
+      if (s > 1) s = 1;
+      else if (s < -1) s = -1;
+      boosted[i] = s;
+    }
+
+    const inputTensor = new ort.Tensor("float32", boosted, [1, boosted.length]);
     const stateTensor = new ort.Tensor("float32", this.state, STATE_DIMS);
     const srTensor = new ort.Tensor(
       "int64",
@@ -139,14 +184,8 @@ export class MainThreadVAD {
     const prob = (results[outputName].data as Float32Array)[0];
     this.state = new Float32Array(results[newStateName].data as Float32Array);
 
-    let peak = 0;
-    for (let i = 0; i < pcm.length; i++) {
-      const a = pcm[i] < 0 ? -pcm[i] : pcm[i];
-      if (a > peak) peak = a;
-    }
     this.framesProcessed++;
     this.lastProb = prob;
-    this.lastPeak = peak;
     this.lastFrameAt = tFrameStart;
 
     // Hysteresis state machine
