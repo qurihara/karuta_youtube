@@ -69,13 +69,14 @@ export async function createAudioPipeline(
     return peak;
   };
 
+  const vAny = video as unknown as { audioTracks?: { length: number } };
   console.warn(
     "[karuta] audio pipeline created",
     JSON.stringify({
       sampleRate: audioCtx.sampleRate,
       state: audioCtx.state,
       videoSrc: video.currentSrc?.slice(0, 80),
-      audioTracks: video.audioTracks?.length,
+      audioTracks: vAny.audioTracks?.length ?? null,
     }),
   );
 
