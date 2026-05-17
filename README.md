@@ -1,4 +1,4 @@
-# Karuta YouTube HUD
+# SpeechRewinder for YouTube
 
 YouTubeで競技かるたの試合動画を視聴中、「静粛まで巻き戻し」ボタンをワンクリックで使えるChrome拡張 (Manifest V3)。
 
@@ -8,7 +8,7 @@ YouTubeで競技かるたの試合動画を視聴中、「静粛まで巻き戻�
 
 ## インストール (利用するだけの場合)
 
-[GitHub Release](https://github.com/qurihara/karuta_youtube/releases/latest) から `karuta-youtube-hud.zip` をダウンロードして:
+[GitHub Release](https://github.com/qurihara/SpeechRewinder-for-youtube/releases/latest) から `speechrewinder-for-youtube.zip` をダウンロードして:
 
 1. zip を解凍
 2. Chrome で `chrome://extensions/` を開く
@@ -66,7 +66,7 @@ bash scripts/fetch-models.sh
 ```bash
 npm run dev      # ウォッチビルド (vite build --watch)
 npm run build    # 1 回ビルド → dist/
-npm run package  # build + zip 化 → karuta-youtube-hud.zip
+npm run package  # build + zip 化 → speechrewinder-for-youtube.zip
 ```
 
 ### 4. Chrome に読み込み

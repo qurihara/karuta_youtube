@@ -7,10 +7,10 @@
 ## 名称 (Name) — 最大 45 文字
 
 ```
-Karuta YouTube HUD
+SpeechRewinder for YouTube
 ```
 
-(もし日本語の方がよければ: `競技かるた巻き戻しHUD - Karuta YouTube HUD`)
+(もし日本語の方がよければ: `競技かるた巻き戻しHUD - SpeechRewinder for YouTube`)
 
 ## 短い説明 (Summary) — 最大 132 文字
 
@@ -51,11 +51,11 @@ YouTubeで競技かるたの試合動画を視聴中、ブラウザ内のVAD (Vo
 ・全ての処理はあなたのブラウザ内のWebAssemblyで完結します
 ・ユーザー設定はchrome.storage.sync (あなた自身のGoogleアカウント内同期) にのみ保存
 ・分析ツール・トラッキング・広告SDKは一切含みません
-・プライバシーポリシー: https://github.com/qurihara/karuta_youtube/blob/main/PRIVACY.md
+・プライバシーポリシー: https://github.com/qurihara/SpeechRewinder-for-youtube/blob/main/PRIVACY.md
 
 ■ ソースコード (オープンソース)
 
-https://github.com/qurihara/karuta_youtube
+https://github.com/qurihara/SpeechRewinder-for-youtube
 
 ■ 同梱モデル
 

@@ -9,7 +9,7 @@
 - [ ] デベロッパー情報入力 (公開名、メールアドレス、物理住所など)
 
 ### 2. 拡張パッケージ
-- [x] `karuta-youtube-hud.zip` (リポジトリルートに `npm run package` で生成、または最新の [GitHub Release](https://github.com/qurihara/karuta_youtube/releases/latest) から)
+- [x] `speechrewinder-for-youtube.zip` (リポジトリルートに `npm run package` で生成、または最新の [GitHub Release](https://github.com/qurihara/SpeechRewinder-for-youtube/releases/latest) から)
 
 ### 3. 画像素材
 - [ ] **アイコン 128×128** — `public/icons/icon-128.png` に同梱済み (zip経由で自動使用)
@@ -27,7 +27,7 @@
 - [x] `PRIVACY.md` 作成済み
 - 公開URL (ストアの「プライバシーポリシー URL」に入力):
   ```
-  https://github.com/qurihara/karuta_youtube/blob/main/PRIVACY.md
+  https://github.com/qurihara/SpeechRewinder-for-youtube/blob/main/PRIVACY.md
   ```
 
 ## ストア入力項目 (デベロッパーコンソール)
@@ -63,7 +63,7 @@
 ## 提出後のリリースサイクル (今後)
 
 1. コード修正 → バージョン bump (`package.json` と `src/manifest.ts`)
-2. `npm run package` → `karuta-youtube-hud.zip`
+2. `npm run package` → `speechrewinder-for-youtube.zip`
 3. デベロッパーコンソールで新パッケージをアップロード
 4. (任意) 同時に GitHub にも tag + Release を作る
 

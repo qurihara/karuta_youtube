@@ -2,9 +2,9 @@ import { defineManifest } from "@crxjs/vite-plugin";
 
 export default defineManifest({
   manifest_version: 3,
-  name: "Karuta YouTube HUD",
-  version: "1.0.0",
-  description: "競技かるた向け、上の句直前にワンクリックで巻き戻すYouTube HUD",
+  name: "SpeechRewinder for YouTube",
+  version: "1.1.0",
+  description: "YouTubeで「次の発話の直前」までワンクリックで巻き戻すHUD。競技かるたの上の句直前など、ピンポイントな聞き直しに最適。",
   permissions: ["storage"],
   host_permissions: ["https://www.youtube.com/*"],
   background: {
@@ -30,7 +30,7 @@ export default defineManifest({
   },
   action: {
     default_popup: "src/popup/popup.html",
-    default_title: "Karuta YouTube HUD",
+    default_title: "SpeechRewinder for YouTube",
     default_icon: {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",

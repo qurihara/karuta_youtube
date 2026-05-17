@@ -1,14 +1,14 @@
 {
-  "name": "karuta-youtube-hud",
-  "version": "1.0.0",
-  "description": "Chrome extension that overlays a rewind-to-just-before-the-reading HUD on YouTube for competitive karuta videos.",
+  "name": "speechrewinder-for-youtube",
+  "version": "1.1.0",
+  "description": "Chrome extension that overlays a rewind-to-just-before-the-next-utterance HUD on YouTube. Originally built for competitive karuta (上の句直前への巻き戻し) but useful for any pinpoint re-listening.",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite build --watch --mode development",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "package": "npm run build && find dist -name .DS_Store -delete && rm -rf dist/.vite && rm -f karuta-youtube-hud.zip && cd dist && zip -r ../karuta-youtube-hud.zip ."
+    "package": "npm run build && find dist -name .DS_Store -delete && rm -rf dist/.vite && rm -f speechrewinder-for-youtube.zip && cd dist && zip -r ../speechrewinder-for-youtube.zip ."
   },
   "dependencies": {
     "onnxruntime-web": "^1.17.3"

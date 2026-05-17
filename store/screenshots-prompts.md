@@ -43,7 +43,7 @@ A compact branded tile, dark blue gradient background (#1a1a1a to #2563eb), with
 ストア掲載のトップに表示される大型バナー。
 
 ```
-A wide, cinematic horizontal banner. Left side: an abstract dark blue gradient with concentric circular ripples emanating from a central "◀" arrow icon, suggesting speech-detection sonar. Right side: a soft photograph of stacked traditional karuta cards on a tatami mat, slightly out of focus. In the center, large Japanese type "競技かるたに、巻き戻し" (Rewind, for karuta) in elegant gothic font, white. Bottom-right corner: small "Karuta YouTube HUD" branding. 1400×560.
+A wide, cinematic horizontal banner. Left side: an abstract dark blue gradient with concentric circular ripples emanating from a central "◀" arrow icon, suggesting speech-detection sonar. Right side: a soft photograph of stacked traditional karuta cards on a tatami mat, slightly out of focus. In the center, large Japanese type "競技かるたに、巻き戻し" (Rewind, for karuta) in elegant gothic font, white. Bottom-right corner: small "SpeechRewinder for YouTube" branding. 1400×560.
 ```
 
 ---

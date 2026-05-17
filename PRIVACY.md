@@ -1,8 +1,8 @@
-# プライバシーポリシー — Karuta YouTube HUD
+# プライバシーポリシー — SpeechRewinder for YouTube
 
 最終更新日: 2026-05-17
 
-本Chrome拡張機能「Karuta YouTube HUD」(以下「本拡張」) は、ユーザーのプライバシーを最大限尊重します。
+本Chrome拡張機能「SpeechRewinder for YouTube」(以下「本拡張」) は、ユーザーのプライバシーを最大限尊重します。
 
 ## 収集する情報
 
@@ -43,7 +43,7 @@
 
 本拡張のソースコードは MIT ライセンスで公開されています。実装の透明性を確認できます:
 
-https://github.com/qurihara/karuta_youtube
+https://github.com/qurihara/SpeechRewinder-for-youtube
 
 ## 同梱モデル
 
@@ -58,4 +58,4 @@ https://github.com/qurihara/karuta_youtube
 
 本ポリシーまたは本拡張に関するお問い合わせは、GitHub Issues で受け付けます:
 
-https://github.com/qurihara/karuta_youtube/issues
+https://github.com/qurihara/SpeechRewinder-for-youtube/issues
