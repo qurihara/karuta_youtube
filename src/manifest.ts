@@ -3,8 +3,8 @@ import { defineManifest } from "@crxjs/vite-plugin";
 export default defineManifest({
   manifest_version: 3,
   name: "SpeechRewinder for YouTube",
-  version: "1.1.0",
-  description: "YouTubeで「次の発話の直前」までワンクリックで巻き戻すHUD。競技かるたの上の句直前など、ピンポイントな聞き直しに最適。",
+  version: "1.2.0",
+  description: "YouTubeで「次の発話の直前」までワンクリックで巻き戻すコントロールUI。競技かるたの上の句直前など、ピンポイントな聞き直しに最適。",
   permissions: ["storage"],
   host_permissions: ["https://www.youtube.com/*"],
   background: {

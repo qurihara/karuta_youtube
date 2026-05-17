@@ -1,6 +1,6 @@
 # LLM画像生成プロンプト集 — Chrome Web Store 提出用
 
-`store/screenshots/` 配下の 1〜5 は実HUDモックのスクリーンショット (1280×800 PNG) が既に用意されています。下記は**ヒーロー画像**や**プロモタイル**など追加のイメージ素材を LLM画像生成 (DALL·E / Imagen / Midjourney / SDXL 等) で作るときの推奨プロンプトです。
+`store/screenshots/` 配下の 1〜5 は実コントロールUIモックのスクリーンショット (1280×800 PNG) が既に用意されています。下記は**ヒーロー画像**や**プロモタイル**など追加のイメージ素材を LLM画像生成 (DALL·E / Imagen / Midjourney / SDXL 等) で作るときの推奨プロンプトです。
 
 すべて **横長 1280×800** または **440×280 (小プロモタイル)** で出力するように指定してください。
 
@@ -11,7 +11,7 @@
 ### Prompt A — 機能の視覚化 (推奨・抽象的)
 
 ```
-A clean, modern Chrome browser window screenshot showing a YouTube-style video player on a dark background. At the top center of the video, a small horizontal pill-shaped overlay button is glowing soft blue with a subtle ring of light expanding outward, labeled "◀ 静粛まで巻き戻し" in white. Below the player is a faint waveform visualization with alternating speech and silence segments marked. The aesthetic is minimalist, dark-mode, slightly futuristic, with a hint of traditional Japanese karuta cards (small, gold leaf, blurred) in the bottom corner as a subtle motif. 16:9 aspect ratio, ultra-sharp, photographic realism with UI overlays.
+A clean, modern Chrome browser window screenshot showing a YouTube-style video player on a dark background. At the top center of the video, a small horizontal pill-shaped overlay button is glowing soft blue with a subtle ring of light expanding outward, labeled "◀ 発話前に戻る" in white. Below the player is a faint waveform visualization with alternating speech and silence segments marked. The aesthetic is minimalist, dark-mode, slightly futuristic, with a hint of traditional Japanese karuta cards (small, gold leaf, blurred) in the bottom corner as a subtle motif. 16:9 aspect ratio, ultra-sharp, photographic realism with UI overlays.
 ```
 
 ### Prompt B — 競技かるたの瞬間 (ストーリー寄り)
@@ -33,7 +33,7 @@ Editorial illustration in muted dark blue, white, and ink-wash style. The compos
 ストアの一覧/カテゴリページで使われる小さなタイル。視認性の高さが命。
 
 ```
-A compact branded tile, dark blue gradient background (#1a1a1a to #2563eb), with a large white pill-shaped button in the center labeled "◀ 静粛まで巻き戻し" in Japanese, accompanied by a small "K" logo bottom-right. Aspect ratio 440×280. Clean, high contrast, app-store-style branding.
+A compact branded tile, dark blue gradient background (#1a1a1a to #2563eb), with a large white pill-shaped button in the center labeled "◀ 発話前に戻る" in Japanese, accompanied by a small "K" logo bottom-right. Aspect ratio 440×280. Clean, high contrast, app-store-style branding.
 ```
 
 ---
@@ -68,11 +68,11 @@ A flat, minimalist app icon: a stylized left-pointing arrow ◀ inside a rounded
 
 ---
 
-## 既存の実HUDスクリーンショット (差し替え不要)
+## 既存の実コントロールUIスクリーンショット (差し替え不要)
 
 | ファイル | 内容 |
 |---|---|
-| `screenshots/1-active.png` | 動画上でHUDが青く点灯した瞬間 (基本機能) |
+| `screenshots/1-active.png` | 動画上でコントロールUIが青く点灯した瞬間 (基本機能) |
 | `screenshots/2-expanded.png` | ⚙ で展開した詳細パネル (N秒, 無音閾値, タイムライン, 診断行) |
 | `screenshots/3-live.png` | ライブ配信での表示 (LIVEバッジ) |
 | `screenshots/4-popup-on.png` | ブラウザツールバーのポップアップ ON 状態 |

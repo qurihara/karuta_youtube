@@ -1,6 +1,6 @@
 {
   "name": "speechrewinder-for-youtube",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Chrome extension that overlays a rewind-to-just-before-the-next-utterance HUD on YouTube. Originally built for competitive karuta (上の句直前への巻き戻し) but useful for any pinpoint re-listening.",
   "private": true,
   "type": "module",

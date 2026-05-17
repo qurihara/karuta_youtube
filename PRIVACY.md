@@ -27,7 +27,7 @@
 ## 権限の使用目的
 
 - **`storage`**: ユーザー設定 (拡張ON/OFF、巻き戻し秒数、無音閾値) を保存するため
-- **host_permissions `https://www.youtube.com/*`**: YouTube動画ページに HUD を表示し、`<video>` 要素から音声を取得するため
+- **host_permissions `https://www.youtube.com/*`**: YouTube動画ページに コントロールUI を表示し、`<video>` 要素から音声を取得するため
 
 いずれの権限も上記目的以外には使用しません。
 

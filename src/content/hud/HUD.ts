@@ -68,8 +68,8 @@ export class Hud {
     // DOMException on this page).
     this.rewindBtn = el(
       "button",
-      { class: "rewind-btn inactive", type: "button", title: "静粛まで巻き戻し" },
-      [el("span", {}, ["◀"]), el("span", {}, ["静粛まで巻き戻し"])],
+      { class: "rewind-btn inactive", type: "button", title: "発話前に戻る" },
+      [el("span", {}, ["◀"]), el("span", {}, ["発話前に戻る"])],
     );
     this.gearBtn = el(
       "button",
